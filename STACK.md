@@ -154,7 +154,7 @@ Fitur Sorting dapat bekerja bersamaan dengan fitur searching. contoh pada gambar
 Pagination List
 -------------
 [Gambar Pagination Mode]
-untuk fitur pagination gunakan addeventlistener scroll untuk melakukan load data halaman berikutnya. data halaman berikutnya langsung ditambahkan ke data sebelumnya. sehingga data akan bertambah ketika dilakukan scrolling sampai bawah.
+untuk fitur pagination gunakan addEventListener scroll untuk melakukan load data halaman berikutnya. data halaman berikutnya langsung ditambahkan ke data sebelumnya. sehingga data akan bertambah ketika dilakukan scrolling sampai bawah.
 
 Adding View
 -------------
@@ -185,23 +185,14 @@ Keywords Tech Stack
 1. Backend
 2. Sequelize
 3. Frontend
-4. Mobile
-5. React Native
-6. React JS
-7. Vue JS
+4. Vue JS
+5. Vue Router
+6. Vuex
+7. Vite
 8. Graphql
 9. Mocha
 10. Chai
 11. Jest
 12. Database PostgreSQL
-
-
-
-## Error
-1. Button Sort nya kebalik (solved)
-2. Ketika Search data, dan terus edit data, maka data yang di edit tidak ada di list (solved)
-3. Ketika Search data, dan klik button add data, maka keyword yang di form search tidak hilang (solved)
-4. Ketika user klik update avatar, maka pindah ke halaman updateavatar
-5. Ketika Search keyword: 'bo', kenapa muncul selain bo dan harus di produce.
-6. Ketika update gambar, maka gambar yang sebelumnya terhapus juga di folder upload nya
-
+13. Express
+14. Node JS

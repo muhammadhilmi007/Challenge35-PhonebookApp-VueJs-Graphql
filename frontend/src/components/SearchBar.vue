@@ -1,8 +1,8 @@
 <template>
   <div class="search-bar">
     <div class="search-container">
-      <button class="nav-btn">
-        <i class="fas fa-bars"></i>
+      <button class="nav-btn" @click="toggleSort">
+        <i :class="['fa-solid', sortAscending ? 'fa-arrow-up-a-z' : 'fa-arrow-down-a-z']"></i>
       </button>
       
       <div class="search-input-container">
@@ -16,7 +16,7 @@
         />
       </div>
 
-      <button class="nav-btn">
+      <button class="nav-btn" @click="navigateToAdd">
         <i class="fas fa-user-plus"></i>
       </button>
     </div>
@@ -25,14 +25,17 @@
 
 <script>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import debounce from 'lodash.debounce'
 
 export default {
   name: 'SearchBar',
-  emits: ['search'],
+  emits: ['search', 'sort-change'],
   
   setup(props, { emit }) {
+    const router = useRouter()
     const searchQuery = ref('')
+    const sortAscending = ref(true)
     
     const debouncedSearch = debounce((value) => {
       emit('search', value)
@@ -41,10 +44,22 @@ export default {
     const handleSearch = () => {
       debouncedSearch(searchQuery.value)
     }
+
+    const toggleSort = () => {
+      sortAscending.value = !sortAscending.value
+      emit('sort-change', sortAscending.value)
+    }
+
+    const navigateToAdd = () => {
+      router.push({ name: 'Add' })
+    }
     
     return {
       searchQuery,
-      handleSearch
+      handleSearch,
+      sortAscending,
+      toggleSort,
+      navigateToAdd
     }
   }
 }

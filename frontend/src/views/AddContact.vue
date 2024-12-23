@@ -40,10 +40,10 @@
 
 <script>
 import { reactive, ref } from "vue";
-import { useRouter } from "vue-router";
 import { useMutation } from "@vue/apollo-composable";
 import { ADD_CONTACT } from "../graphql/mutations";
 import { GET_CONTACTS } from "../graphql/queries";
+import { useRouter } from "vue-router";
 
 export default {
   name: "AddContact",
@@ -62,23 +62,65 @@ export default {
 
     const loading = ref(false);
 
-    const { mutate: addContact } = useMutation(ADD_CONTACT, {
-      update: (cache, { data: { addContact } }) => {
-        const data = cache.readQuery({
-          query: GET_CONTACTS,
-          variables: { offset: 0, limit: 10 }
-        });
+    // Setup the mutation
+    const { mutate: addContact, onError, onDone } = useMutation(
+      ADD_CONTACT,
+      {
+        update: (cache, { data }) => {
+          if (!data?.addContact) return;
 
-        if (data) {
-          cache.writeQuery({
-            query: GET_CONTACTS,
-            variables: { offset: 0, limit: 10 },
-            data: {
-              ...data,
-              contacts: [addContact, ...data.contacts]
+          try {
+            const existingData = cache.readQuery({
+              query: GET_CONTACTS,
+              variables: { 
+                offset: 0, 
+                limit: 10
+              }
+            });
+
+            if (existingData) {
+              cache.writeQuery({
+                query: GET_CONTACTS,
+                variables: { 
+                  offset: 0, 
+                  limit: 10
+                },
+                data: {
+                  ...existingData,
+                  contacts: [data.addContact, ...existingData.contacts]
+                }
+              });
             }
-          });
+          } catch (err) {
+            console.error('Cache update error:', err);
+          }
         }
+      }
+    );
+
+    onDone(() => {
+      router.push('/');
+    });
+
+    onError((error) => {
+      console.error('Mutation error:', error);
+      loading.value = false;
+      
+      if (error.graphQLErrors?.length > 0) {
+        error.graphQLErrors.forEach(err => {
+          const message = err.message || 'An error occurred';
+          if (err.extensions?.path?.includes('name')) {
+            errors.name = message;
+          } else if (err.extensions?.path?.includes('phone')) {
+            errors.phone = message;
+          } else {
+            errors.name = message;
+          }
+        });
+      } else if (error.networkError) {
+        errors.name = 'Network error. Please check your connection.';
+      } else {
+        errors.name = 'An unexpected error occurred.';
       }
     });
 
@@ -108,17 +150,17 @@ export default {
 
       try {
         loading.value = true;
+        errors.name = '';
+        errors.phone = '';
+        
         await addContact({
           variables: {
             name: form.name.trim(),
-            phone: form.phone.trim(),
-          },
+            phone: form.phone.trim()
+          }
         });
-        router.push('/');
       } catch (error) {
-        console.error("Error adding contact:", error);
-      } finally {
-        loading.value = false;
+        console.error('Submit error:', error);
       }
     };
 
@@ -188,7 +230,8 @@ input.error {
 
 .form-actions {
   display: flex;
-  justify-content: space-between;
+  gap: 1rem;
+  justify-content: flex-end;
   margin-top: 1rem;
 }
 
@@ -196,7 +239,7 @@ button {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
-  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -211,16 +254,17 @@ button[type="submit"]:hover {
 }
 
 button[type="button"] {
-  background-color: #f44336;
-  color: white;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
 }
 
 button[type="button"]:hover {
-  background-color: #da190b;
+  background-color: #e9ecef;
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 </style>

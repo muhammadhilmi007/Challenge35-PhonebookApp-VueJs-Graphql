@@ -6,7 +6,7 @@
 
     <div class="contacts-grid">
       <ContactCard
-        v-for="contact in contacts"
+        v-for="contact in sortedContacts"
         :key="contact.id"
         :contact="contact"
         @edit="$emit('edit', $event)"
@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import ContactCard from './ContactCard.vue'
 
 export default {
@@ -49,6 +49,14 @@ export default {
     hasMore: {
       type: Boolean,
       default: true
+    },
+    sortAscending: {
+      type: Boolean,
+      default: true
+    },
+    searchQuery: {
+      type: String,
+      default: ''
     }
   },
   emits: ['load-more', 'edit', 'delete', 'avatar-update'],
@@ -56,6 +64,27 @@ export default {
   setup(props, { emit }) {
     const loadTrigger = ref(null)
     let observer = null
+
+    const sortedContacts = computed(() => {
+      let filteredContacts = props.contacts
+      
+      // Filter by search query if present
+      if (props.searchQuery) {
+        const query = props.searchQuery.toLowerCase()
+        filteredContacts = filteredContacts.filter(contact => 
+          contact.name.toLowerCase().includes(query)
+        )
+      }
+
+      // Sort contacts by name
+      return [...filteredContacts].sort((a, b) => {
+        const nameA = a.name.toLowerCase()
+        const nameB = b.name.toLowerCase()
+        return props.sortAscending 
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA)
+      })
+    })
 
     const createObserver = () => {
       observer = new IntersectionObserver(
@@ -66,9 +95,9 @@ export default {
           }
         },
         {
-          root: null, // Use viewport as root
-          rootMargin: '100px', // Start loading 100px before element is visible
-          threshold: 0.1 // Trigger when even 10% of the element is visible
+          root: null,
+          rootMargin: '100px',
+          threshold: 0.5
         }
       )
 
@@ -88,7 +117,8 @@ export default {
     })
 
     return {
-      loadTrigger
+      loadTrigger,
+      sortedContacts
     }
   }
 }
